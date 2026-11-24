@@ -1,0 +1,3 @@
+[submodule "adage-upstream"]
+	path = vendor/ADAGE
+	url = https://github.com/SCAlabUnical/ADAGE.git

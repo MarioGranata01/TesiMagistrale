@@ -1,0 +1,9 @@
+diff --git a/simulation/simulation/Simulation.java b/simulation/simulation/Simulation.java
+--- a/simulation/simulation/Simulation.java
++++ b/simulation/simulation/Simulation.java
+@@ -323 +322,0 @@
+-    	System.setProperty("simulation.seed", "0");
+@@ -348 +347,2 @@
+-            logger.info("starting simulation...");
++            logger.info("starting simulation...");
++            logger.info("simulation.seed=%s", System.getProperty("simulation.seed"));
