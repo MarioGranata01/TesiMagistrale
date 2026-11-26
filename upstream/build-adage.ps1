@@ -1,10 +1,16 @@
 #Requires -Version 5.1
 param(
     [string]$SourceDirectory = (Join-Path $PSScriptRoot '../vendor/ADAGE'),
-    [switch]$Unmodified
+    [switch]$Unmodified,
+    [string]$JavaHome
 )
 
 $ErrorActionPreference = 'Stop'
+$javac = 'javac'
+if ($JavaHome) {
+    $suffix = if ([Environment]::OSVersion.Platform -eq 'Win32NT') { '.exe' } else { '' }
+    $javac = (Resolve-Path -LiteralPath (Join-Path $JavaHome "bin/javac$suffix")).Path
+}
 if (-not (Test-Path -LiteralPath (Join-Path $SourceDirectory 'simulation/simulation/Simulation.java') -PathType Leaf)) {
     throw 'Sorgente ADAGE assente. Inizializza il sottomodulo con git submodule update --init.'
 }
@@ -41,7 +47,7 @@ $sourceArguments = $sourceFiles.FullName | ForEach-Object {
 [IO.File]::WriteAllLines($sourceList, [string[]]$sourceArguments, [Text.UTF8Encoding]::new($false))
 
 # Alcuni JAR contengono anche sorgenti. Il sourcepath isolato usa solo le loro classi.
-javac --release 11 -encoding UTF-8 -sourcepath $classes.FullName -cp (Join-Path $source 'lib/*') -d $classes.FullName "@$sourceList"
+& $javac --release 11 -encoding UTF-8 -sourcepath $classes.FullName -cp (Join-Path $source 'lib/*') -d $classes.FullName "@$sourceList"
 if ($LASTEXITCODE -ne 0) {
     throw 'Compilazione ADAGE fallita.'
 }

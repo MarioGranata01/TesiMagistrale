@@ -92,6 +92,26 @@ Dalla radice del repository, dopo `git submodule update --init`:
 
 Il comando compila ADAGE senza patch e avvia Montage 25 e Montage 1.000 con 16 VM, seed `0` e le tre modalità `wgmode` (`-1`, `0`, `2`). Per ogni configurazione verifica gli ID dei task completati nei log, escludendo `Stage-in`. Stampa il percorso dei risultati e salva `run.json` con commit, versioni Java, parametri e SHA-256 dei workflow, `results.csv` con i makespan e i log di WorkflowSim. La cartella viene creata sotto la directory temporanea. Per sceglierne la posizione, passa `-ResultsDirectory`.
 
+Per fissare il JDK su Windows, avvia il comando indicando la cartella di Temurin usata per WP1:
+
+```powershell
+$jdk = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
+powershell.exe -NoProfile -NonInteractive -File ./upstream/run-wp1-baseline.ps1 -JavaHome $jdk
+```
+
+Il percorso va adattato alla propria installazione. La versione di riferimento è **Eclipse Temurin 21.0.12.1+1**. Con `-JavaHome`, compilatore e simulatore usano i binari di quella cartella. `run.json` registra anche i percorsi e gli hash dei binari, le versioni di PowerShell e del sistema operativo, gli argomenti della JVM e le impronte delle dipendenze. Il file `classes.sha256` contiene gli hash delle classi compilate per confrontare due build. Il nome delle eventuali variabili Java che possono aggiungere opzioni viene registrato in `java_override_variables_set`.
+
+### Confrontare lo spareggio per ID
+
+Usa lo stesso JDK per eseguire il sorgente originale e la variante sperimentale:
+
+```powershell
+pwsh -NoProfile -NonInteractive -File ./upstream/run-wp1-baseline.ps1 -JavaHome $jdk
+pwsh -NoProfile -NonInteractive -File ./upstream/run-wp1-baseline.ps1 -JavaHome $jdk -StablePlanner
+```
+
+Con `-StablePlanner`, il runner applica [la patch di spareggio](upstream/0002-stable-planner-ties.patch) a una copia temporanea del pianificatore. Ordina i task con lo stesso valore di `LS` per ID crescente. `run.json` distingue `unmodified-source` da `stable-planner` e registra l'hash della patch quando applicata. Ogni lancio scrive i risultati in una cartella separata.
+
 ### Prova con il JAR distribuito
 
 Il JAR originale ha completato i workflow Montage da 25 e 1.000 task in WorkflowSim. La prova usa il [commit upstream `063fa27`](https://github.com/SCAlabUnical/ADAGE/tree/063fa27d0eb0f90d123f917d7c51fd76eb153476), OpenJDK Temurin 21.0.12.1, 16 VM simulate, `bw=1000` come valore della CLI e la pianificazione `CRITICAL_PATH`.

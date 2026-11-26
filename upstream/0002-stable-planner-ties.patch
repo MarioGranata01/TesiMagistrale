@@ -1,0 +1,9 @@
+diff --git a/src/org/workflowsim/planning/CriticalPathPlanningAlgorithm.java b/src/org/workflowsim/planning/CriticalPathPlanningAlgorithm.java
+--- a/src/org/workflowsim/planning/CriticalPathPlanningAlgorithm.java
++++ b/src/org/workflowsim/planning/CriticalPathPlanningAlgorithm.java
+@@ -111,3 +111,2 @@
+-		Arrays.sort(ret, (Comparator<? super Task>) (Task o1, Task o2) -> {
+-			return Integer.signum((int) (o1.getLatestStart() - (o2.getLatestStart())));
+-		});
++		Arrays.sort(ret, Comparator.comparingLong(Task::getLatestStart)
++				.thenComparingInt(Task::getCloudletId));
