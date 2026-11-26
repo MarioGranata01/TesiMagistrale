@@ -2,11 +2,13 @@
 
 Tesi magistrale sullo scheduling di task AI nell'Edge–Cloud Continuum. L'obiettivo è scegliere insieme **il modello di inferenza e la macchina** in base a ciò che la richiesta deve ottenere, alla latenza disponibile e al costo di esecuzione.
 
+Lo scheduler è progettato per task AI di tipi diversi. Il nucleo della tesi è la scelta modello–macchina a partire dai requisiti del task e dallo stato delle risorse. Una pipeline video è un caso d'uso facoltativo per valutare il sistema.
+
 Il codice di partenza per l'evoluzione dello scheduler è **ADAGE (2021)**, in Java su WorkflowSim. Il sorgente è importato in [`vendor/ADAGE`](vendor/ADAGE) come sottomodulo Git, fissato a un commit upstream preciso. Le modifiche di A²DAGE si applicano a questa copia durante la build. La demo Python esplora la classificazione e la scelta modello–nodo.
 
 ## Compilare ADAGE dal sorgente
 
-Servono Git, PowerShell 7 e un JDK 11 o successivo. Dalla radice di A²DAGE, inizializza il sottomodulo e compila:
+Servono Git, Windows PowerShell 5.1 o PowerShell 7 e un JDK 11 o successivo. Dalla radice di A²DAGE, inizializza il sottomodulo e compila:
 
 ```powershell
 git submodule update --init
@@ -30,7 +32,7 @@ Su Montage 1.000 con `CRITICAL_PATH`, 16 VM e seed 0, le due build da sorgente, 
 
 ## Demo Python
 
-La demo riproduce richieste di rilevamento di oggetti in video, uno stadio della pipeline prevista dal piano operativo *Agentic-ADAGE*. Usa due modelli, un nodo edge e un nodo cloud con profili sintetici.
+La traccia di esempio della demo usa richieste di rilevamento di oggetti in video, uno dei workload del piano operativo *Agentic-ADAGE*. Due modelli, un nodo edge e un nodo cloud con profili sintetici permettono di osservare le scelte dello scheduler.
 
 1. Il classificatore traduce la descrizione della richiesta in una classe con deadline e soglia minima di qualità. Se la richiesta specifica limiti più stringenti, valgono quelli.
 2. Lo scheduler stima il tempo di completamento sommando attesa in coda, trasferimento dell'input, caricamento del modello e inferenza. A questi tempi si aggiunge la durata della classificazione per verificare la deadline.
@@ -79,6 +81,18 @@ La scelta deterministica della coppia modello–nodo è un primo passo verso il 
 - **Vincoli e contesa**. DARCS esplicita i vincoli di deadline, memoria e affidabilità. MCSched studia la contesa della memoria condivisa su Jetson, da misurare quando classificatore ed executor girano sulla stessa macchina. [DARCS](https://doi.org/10.1016/j.sysarc.2026.104019) · [MCSched](https://doi.org/10.1145/3838177.3841726)
 
 ## WP1 · Prima esecuzione di ADAGE originale
+
+### Eseguire la baseline da sorgente
+
+Dalla radice del repository, dopo `git submodule update --init`:
+
+```powershell
+./upstream/run-wp1-baseline.ps1
+```
+
+Il comando compila ADAGE senza patch e avvia Montage 25 e Montage 1.000 con 16 VM, seed `0` e le tre modalità `wgmode` (`-1`, `0`, `2`). Per ogni configurazione verifica gli ID dei task completati nei log, escludendo `Stage-in`. Stampa il percorso dei risultati e salva `run.json` con commit, versioni Java, parametri e SHA-256 dei workflow, `results.csv` con i makespan e i log di WorkflowSim. La cartella viene creata sotto la directory temporanea. Per sceglierne la posizione, passa `-ResultsDirectory`.
+
+### Prova con il JAR distribuito
 
 Il JAR originale ha completato i workflow Montage da 25 e 1.000 task in WorkflowSim. La prova usa il [commit upstream `063fa27`](https://github.com/SCAlabUnical/ADAGE/tree/063fa27d0eb0f90d123f917d7c51fd76eb153476), OpenJDK Temurin 21.0.12.1, 16 VM simulate, `bw=1000` come valore della CLI e la pianificazione `CRITICAL_PATH`.
 

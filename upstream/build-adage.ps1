@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 5.1
 param(
     [string]$SourceDirectory = (Join-Path $PSScriptRoot '../vendor/ADAGE'),
     [switch]$Unmodified
@@ -35,9 +35,10 @@ if (-not $Unmodified) {
 
 $sourceFiles = Get-ChildItem -LiteralPath (Join-Path $source 'src'), $simulation.FullName -File -Recurse -Filter '*.java'
 $sourceList = Join-Path $build 'sources.txt'
-$sourceFiles.FullName | ForEach-Object {
+$sourceArguments = $sourceFiles.FullName | ForEach-Object {
     '"' + $_.Replace('\', '/') + '"'
-} | Set-Content -LiteralPath $sourceList -Encoding utf8NoBOM
+}
+[IO.File]::WriteAllLines($sourceList, [string[]]$sourceArguments, [Text.UTF8Encoding]::new($false))
 
 # Alcuni JAR contengono anche sorgenti. Il sourcepath isolato usa solo le loro classi.
 javac --release 11 -encoding UTF-8 -sourcepath $classes.FullName -cp (Join-Path $source 'lib/*') -d $classes.FullName "@$sourceList"
